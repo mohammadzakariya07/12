@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Aadhaar Dashboard</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef2f5;
+      padding: 20px;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #timer {
+      font-size: 14px;
+      color: #555;
+    }
+    button {
+      padding: 8px 14px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    .logout-btn {
+      background: #c62828;
+      color: white;
+      border: none;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      margin: 15px 0;
+      border-left: 6px solid #003366;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+    }
+    #updateOptions {
+      display: none;
+    }
+    #popup {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+    }
+    .popup-box {
+      background: white;
+      width: 460px;
+      margin: 60px auto;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .popup-box input,
+    .popup-box textarea,
+    .popup-box select {
+      width: 100%;
+      padding: 6px;
+      margin-top: 6px;
+    }
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 13px;
+      color: gray;
+    }
+  </style>
+</head>
+
+<body onload="checkSession()">
+
+<div class="top-bar">
+  <h2>Smart Aadhaar Center Monitoring System</h2>
+  <div>
+    <span id="timer"></span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<hr>
+
+<div id="mainOptions">
+  <div class="card" onclick="showUpdateOptions()">Update Aadhaar Card</div>
+  <div class="card" onclick="freshApply()">Fresh Aadhaar Apply</div>
+</div>
+
+<div id="updateOptions">
+  <h3>Select Aadhaar Update Type</h3>
+  <button onclick="openUpdateForm('name')">Update Name</button>
+  <button onclick="openUpdateForm('gender')">Update Gender</button>
+  <button onclick="openUpdateForm('address')">Update Address</button>
+  <button onclick="openUpdateForm('mobile')">Update Mobile</button>
+  <button onclick="openUpdateForm('email')">Update Email</button>
+  <button onclick="openUpdateForm('biometric')">Update Biometrics</button>
+</div>
+
+<div id="popup">
+  <div class="popup-box">
+    <h3 id="popupTitle"></h3>
+    <div id="popupBody"></div>
+    <br>
+    <button onclick="nextStep()">Next</button>
+    <button onclick="closePopup()">Cancel</button>
+  </div>
+</div>
+
+<footer>
+  Designed & Developed by <b>Mohammad Zakariya</b>
+</footer>
+
+<script src="dashboard.js"></script>
+
+<script>
+/* ================= CONFIG ================= */
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
+
+let collectedData = {};
+let serviceType = "";
+
+/* ================= UPDATE FLOW ================= */
+function showUpdateOptions() {
+  document.getElementById("mainOptions").style.display = "none";
+  document.getElementById("updateOptions").style.display = "block";
+}
+
+function openUpdateForm(type) {
+  serviceType = "Update Aadhaar";
+  collectedData.updateType = type;
+  document.getElementById("popup").style.display = "block";
+
+  let html = "";
+  let title = "";
+
+  if (type === "name") {
+    title = "Update Name";
+    html = `
+      Current Name:<input id="currentName">
+      Updated Name:<input id="updatedName">
+    `;
+  }
+  if (type === "gender") {
+    title = "Update Gender";
+    html = `
+      Current Gender:<select id="currentGender">
+        <option>Male</option><option>Female</option><option>Other</option>
+      </select>
+      Updated Gender:<select id="updatedGender">
+        <option>Male</option><option>Female</option><option>Other</option>
+      </select>
+    `;
+  }
+  if (type === "address") {
+    title = "Update Address";
+    html = `
+      Current Address:<textarea id="currentAddress"></textarea>
+      Updated Address:<textarea id="updatedAddress"></textarea>
+    `;
+  }
+  if (type === "mobile") {
+    title = "Update Mobile";
+    html = `
+      Current Mobile:<input id="currentMobile">
+      Updated Mobile:<input id="updatedMobile">
+    `;
+  }
+  if (type === "email") {
+    title = "Update Email";
+    html = `
+      Current Email:<input id="currentEmail">
+      Updated Email:<input id="updatedEmail">
+    `;
+  }
+  if (type === "biometric") {
+    title = "Update Biometrics";
+    html = `
+      <input type="checkbox" value="Fingerprint"> Fingerprint<br>
+      <input type="checkbox" value="Photo"> Photo<br>
+      <input type="checkbox" value="Iris"> Iris
+    `;
+  }
+
+  document.getElementById("popupTitle").innerText = title;
+  document.getElementById("popupBody").innerHTML = html;
+}
+
+/* ================= FRESH APPLY ================= */
+function freshApply() {
+  serviceType = "Fresh Aadhaar";
+  document.getElementById("popup").style.display = "block";
+  document.getElementById("popupTitle").innerText = "Fresh Aadhaar Application";
+  document.getElementById("popupBody").innerHTML = `
+    Name:<input id="name">
+    Gender:<select id="gender">
+      <option>Male</option><option>Female</option><option>Other</option>
+    </select>
+    Address:<textarea id="address"></textarea>
+    Mobile:<input id="mobile">
+    Email:<input id="email">
+  `;
+}
+
+/* ================= NEXT STEP (FIXED) ================= */
+function nextStep() {
+  collectedData = collectedData || {};
+
+  const fields = document.querySelectorAll(
+    "#popupBody input, #popupBody textarea, #popupBody select"
+  );
+
+  fields.forEach(el => {
+    if (el.type === "checkbox") {
+      if (!collectedData.biometrics) collectedData.biometrics = [];
+      if (el.checked) collectedData.biometrics.push(el.value);
+    } else {
+      collectedData[el.id] = el.value;
+    }
+  });
+
+  document.getElementById("popupBody").innerHTML = `
+    <h4>Upload Required Documents</h4>
+    <input type="file" accept="application/pdf"><br><br>
+    <button onclick="submitApplication()">Submit Application</button>
+  `;
+}
+
+/* ================= SUBMIT ================= */
+function submitApplication() {
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: `service=${serviceType}&data=${encodeURIComponent(JSON.stringify(collectedData))}`
+  })
+  .then(() => {
+    alert("Application submitted successfully");
+    location.reload();
+  })
+  .catch(() => alert("Submission error"));
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+</script>
+
+</body>
+</html>
