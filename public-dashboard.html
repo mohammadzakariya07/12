@@ -6,45 +6,41 @@
 
 <style>
   body {
-    font-family: Arial, sans-serif;
+    font-family: Arial;
     background: #0f172a;
     color: white;
+    padding: 20px;
     text-align: center;
-    padding: 30px;
   }
-
   h2 {
-    margin-bottom: 30px;
+    margin-bottom: 20px;
   }
-
   .container {
     display: flex;
     justify-content: center;
     gap: 20px;
     flex-wrap: wrap;
   }
-
   .card {
     background: #1e293b;
-    padding: 20px;
     width: 220px;
+    padding: 25px;
     border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.4);
   }
-
-  .label {
-    font-size: 16px;
+  .card h3 {
+    font-size: 18px;
+    margin: 0;
     color: #93c5fd;
   }
-
-  .value {
-    font-size: 36px;
+  .card p {
+    font-size: 42px;
+    margin: 12px 0 0;
     font-weight: bold;
-    margin-top: 10px;
     color: #38bdf8;
   }
-
   footer {
-    margin-top: 40px;
+    margin-top: 30px;
     font-size: 12px;
     opacity: 0.6;
   }
@@ -53,63 +49,51 @@
 
 <body>
 
-<h2>📊 Smart Aadhaar – Live Public Dashboard</h2>
+<h2>📊 Smart Aadhaar – Live Status Dashboard</h2>
 
 <div class="container">
   <div class="card">
-    <div class="label">Total Applications</div>
-    <div class="value" id="total">Loading...</div>
+    <h3>Total Applications</h3>
+    <p id="total">0</p>
   </div>
 
   <div class="card">
-    <div class="label">Pending</div>
-    <div class="value" id="pending">Loading...</div>
+    <h3>Pending</h3>
+    <p id="pending">0</p>
   </div>
 
   <div class="card">
-    <div class="label">Done</div>
-    <div class="value" id="done">Loading...</div>
+    <h3>Done</h3>
+    <p id="done">0</p>
   </div>
 
   <div class="card">
-    <div class="label">Not Done</div>
-    <div class="value" id="notDone">Loading...</div>
+    <h3>Not Done</h3>
+    <p id="notDone">0</p>
   </div>
 </div>
 
 <footer>
-  Public • Read-only • Auto-updating
+  Live data • Read-only • Auto-updated
 </footer>
 
 <script>
 const API =
-"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
+"https://script.google.com/macros/s/AKfycbxRffghkixlECYJ6JGGAUFULLCvuIwtJAUKphFgvcczYBx_1bX-5ov9SO_JbU6r6_TL/exec?action=stats";
 
 function loadData() {
   fetch(API)
-    .then(response => response.json())
-    .then(data => {
-      console.log("API DATA:", data); // DEBUG (you can remove later)
-
-      document.getElementById("total").innerText =
-        data.total !== undefined ? data.total : "0";
-
-      document.getElementById("pending").innerText =
-        data.pending !== undefined ? data.pending : "0";
-
-      document.getElementById("done").innerText =
-        data.done !== undefined ? data.done : "0";
-
-      document.getElementById("notDone").innerText =
-        data.notDone !== undefined ? data.notDone : "0";
-    })
-    .catch(error => {
-      console.error("Fetch error:", error);
+    .then(res => res.json())
+    .then(d => {
+      document.getElementById("total").innerText = d.total;
+      document.getElementById("pending").innerText = d.pending;
+      document.getElementById("done").innerText = d.done;
+      document.getElementById("notDone").innerText = d.notDone;
     });
 }
 
 loadData();
-setInterval(loadData, 5000); // refresh every 5 sec
+setInterval(loadData, 5000); // auto update every 5 sec
 </script>
 
 </body>
