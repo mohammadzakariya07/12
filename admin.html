@@ -1,93 +1,174 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Admin Panel</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<title>Admin Panel – Aadhaar Applications</title>
 
 <style>
-body { font-family: Arial; background:#eef2f5; padding:20px; }
-.box { background:#fff; padding:20px; max-width:500px; margin:auto; }
-select, input, textarea, button { width:100%; padding:8px; margin-top:10px; }
-#popup { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); }
-.popup-box { background:#fff; padding:20px; margin:60px auto; width:450px; }
-canvas { margin-top:20px; }
+  body {
+    font-family: Arial;
+    background: #eef2f5;
+    padding: 20px;
+  }
+  .box {
+    background: #fff;
+    padding: 20px;
+    max-width: 450px;
+    margin: auto;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  }
+  input, textarea, select, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 10px;
+  }
+  button { cursor: pointer; }
+
+  #panel { display: none; }
+
+  #popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+  }
+  .popup-box {
+    background: white;
+    width: 420px;
+    margin: 80px auto;
+    padding: 20px;
+  }
 </style>
 </head>
 
 <body>
 
+<!-- ================= ADMIN LOGIN ================= -->
 <div class="box" id="loginBox">
-<h3>Admin Login</h3>
-<input id="u" placeholder="Username">
-<input id="p" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
-<p id="err" style="color:red"></p>
+  <h2>Admin Login</h2>
+  <input id="adminUser" placeholder="Username">
+  <input id="adminPass" type="password" placeholder="Password">
+  <button onclick="adminLogin()">Login</button>
+  <p id="loginError" style="color:red"></p>
 </div>
 
-<div class="box" id="panel" style="display:none">
-<h3>Applications</h3>
-<select id="list" onchange="openPopup()"></select>
+<!-- ================= ADMIN PANEL ================= -->
+<div class="box" id="panel">
+  <h2>Application Work Panel</h2>
+  <select id="appList" onchange="openPopup()">
+    <option value="">Select Application</option>
+  </select>
 </div>
 
+<!-- ================= POPUP ================= -->
 <div id="popup">
-<div class="popup-box">
-<button onclick="done()">Done</button>
-<button onclick="notDone()">Not Done</button>
-<div id="form"></div>
-<canvas id="chart"></canvas>
-<button onclick="submit()">Submit</button>
-</div>
+  <div class="popup-box">
+    <h3>Update Application Status</h3>
+
+    <button onclick="markDone()">Done</button>
+    <button onclick="markNotDone()">Not Done</button>
+
+    <div id="formArea"></div>
+
+    <br>
+    <button onclick="submitStatus()">Submit</button>
+    <button onclick="closePopup()">Cancel</button>
+  </div>
 </div>
 
 <script>
-const API =
+const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
 
-let row="", status="";
+// ====== ADMIN LOGIN ======
+function adminLogin() {
+  const u = document.getElementById("adminUser").value;
+  const p = document.getElementById("adminPass").value;
 
-function login(){
-  if(u.value==="admin" && p.value==="admin123"){
-    loginBox.style.display="none";
-    panel.style.display="block";
-    fetch(API).then(r=>r.json()).then(d=>{
-      list.innerHTML='<option>Select</option>';
-      d.forEach(i=>{
-        list.innerHTML+=`<option value="${i.row}">${i.row} | ${i.updateType} | ${i.status}</option>`;
+  if (u === "admin" && p === "admin123") {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("panel").style.display = "block";
+    loadApplications();
+  } else {
+    document.getElementById("loginError").innerText =
+      "Invalid admin credentials";
+  }
+}
+
+// ====== LOAD APPLICATIONS ======
+let selectedRow = "";
+let status = "";
+
+function loadApplications() {
+  fetch(SCRIPT_URL)
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById("appList");
+      list.innerHTML = `<option value="">Select Application</option>`;
+      data.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.row;
+        opt.text =
+          item.row + " | " + item.service +
+          " | " + item.updateType +
+          " | " + item.status;
+        list.appendChild(opt);
       });
     });
-  } else err.innerText="Invalid credentials";
 }
 
-function openPopup(){
-  row=list.value;
-  popup.style.display="block";
+// ====== SELECT APPLICATION ======
+function openPopup() {
+  selectedRow = document.getElementById("appList").value;
+  if (selectedRow) {
+    document.getElementById("popup").style.display = "block";
+    document.getElementById("formArea").innerHTML = "";
+  }
 }
 
-function done(){
-  status="Done";
-  form.innerHTML='Phone:<input id="phone">';
-  fetch(API+'?action=doneTypes').then(r=>r.json()).then(drawChart);
+// ====== DONE / NOT DONE ======
+function markDone() {
+  status = "Done";
+  document.getElementById("formArea").innerHTML = `
+    Phone Number:
+    <input id="phone">
+  `;
 }
 
-function notDone(){
-  status="Not Done";
-  form.innerHTML='Reason:<textarea id="remarks"></textarea>Phone:<input id="phone">';
-  fetch(API+'?action=notDoneReasons').then(r=>r.json()).then(drawChart);
+function markNotDone() {
+  status = "Not Done";
+  document.getElementById("formArea").innerHTML = `
+    Reason:
+    <textarea id="remarks"></textarea>
+    Phone Number:
+    <input id="phone">
+  `;
 }
 
-function drawChart(data){
-  new Chart(chart,{
-    type:"bar",
-    data:{labels:Object.keys(data),datasets:[{data:Object.values(data),backgroundColor:"#3b82f6"}]}
+// ====== SUBMIT STATUS ======
+function submitStatus() {
+  const phone = document.getElementById("phone")?.value || "";
+  const remarks = document.getElementById("remarks")?.value || "";
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body:
+      "action=update" +
+      "&row=" + selectedRow +
+      "&status=" + status +
+      "&remarks=" + encodeURIComponent(remarks) +
+      "&phone=" + phone
+  })
+  .then(() => {
+    alert("Status updated successfully");
+    location.reload();
   });
 }
 
-function submit(){
-  fetch(API,{
-    method:"POST",
-    headers:{"Content-Type":"application/x-www-form-urlencoded"},
-    body:`action=update&row=${row}&status=${status}&remarks=${remarks?.value||""}&phone=${phone.value}`
-  }).then(()=>location.reload());
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
 }
 </script>
 
