@@ -2,50 +2,74 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Smart Aadhaar – Status Dashboard</title>
+<title>Smart Aadhaar – Live Application Dashboard</title>
 
 <style>
   body {
     font-family: Arial, sans-serif;
     background: #0f172a;
-    color: #ffffff;
-    text-align: center;
-    padding: 40px;
+    color: white;
+    padding: 30px;
   }
 
   h1 {
-    margin-bottom: 40px;
+    text-align: center;
+    margin-bottom: 30px;
   }
 
-  .dashboard {
+  .cards {
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 20px;
     flex-wrap: wrap;
+    margin-bottom: 40px;
   }
 
   .card {
     background: #1e293b;
     width: 220px;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
   }
 
   .label {
-    font-size: 16px;
     color: #93c5fd;
+    font-size: 14px;
   }
 
   .value {
-    font-size: 42px;
+    font-size: 36px;
     font-weight: bold;
-    margin-top: 12px;
+    margin-top: 10px;
     color: #38bdf8;
   }
 
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: #020617;
+  }
+
+  th, td {
+    padding: 12px;
+    border-bottom: 1px solid #334155;
+    text-align: center;
+  }
+
+  th {
+    background: #1e293b;
+    color: #93c5fd;
+  }
+
+  tr:hover {
+    background: #1e293b;
+  }
+
   footer {
-    margin-top: 50px;
+    margin-top: 30px;
+    text-align: center;
     font-size: 12px;
     opacity: 0.6;
   }
@@ -56,7 +80,8 @@
 
 <h1>📊 Smart Aadhaar – Live Application Dashboard</h1>
 
-<div class="dashboard">
+<!-- COUNTERS -->
+<div class="cards">
   <div class="card">
     <div class="label">Total Applicants</div>
     <div class="value" id="total">–</div>
@@ -78,30 +103,67 @@
   </div>
 </div>
 
+<!-- TABLE -->
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Timestamp</th>
+      <th>Service</th>
+      <th>Update Type</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody">
+    <tr><td colspan="5">Loading...</td></tr>
+  </tbody>
+</table>
+
 <footer>
   Public • Read-only • Auto-updating every 5 seconds
 </footer>
 
 <script>
-const API_URL =
-"https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?action=stats";
+const BASE_URL =
+"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec;
 
-function updateDashboard() {
-  fetch(API_URL)
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById("total").innerText = data.total;
-      document.getElementById("pending").innerText = data.pending;
-      document.getElementById("done").innerText = data.done;
-      document.getElementById("notDone").innerText = data.notDone;
-    })
-    .catch(err => {
-      console.error("Dashboard error:", err);
+function loadStats() {
+  fetch(BASE_URL + "?action=stats")
+    .then(res => res.json())
+    .then(d => {
+      total.innerText = d.total;
+      pending.innerText = d.pending;
+      done.innerText = d.done;
+      notDone.innerText = d.notDone;
     });
 }
 
-updateDashboard();
-setInterval(updateDashboard, 5000);
+function loadTable() {
+  fetch(BASE_URL + "?action=list")
+    .then(res => res.json())
+    .then(data => {
+      let html = "";
+      data.forEach(row => {
+        html += `
+          <tr>
+            <td>${row.id}</td>
+            <td>${row.timestamp}</td>
+            <td>${row.service}</td>
+            <td>${row.updateType}</td>
+            <td>${row.status}</td>
+          </tr>
+        `;
+      });
+      tableBody.innerHTML = html;
+    });
+}
+
+loadStats();
+loadTable();
+setInterval(() => {
+  loadStats();
+  loadTable();
+}, 5000);
 </script>
 
 </body>
