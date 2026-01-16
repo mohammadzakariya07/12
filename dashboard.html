@@ -10,25 +10,30 @@
       background: #eef2f5;
       padding: 20px;
     }
+
     .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+
     #timer {
       font-size: 14px;
       color: #555;
     }
+
     button {
       padding: 8px 14px;
       margin: 5px;
       cursor: pointer;
     }
+
     .logout-btn {
       background: #c62828;
       color: white;
       border: none;
     }
+
     .card {
       background: white;
       padding: 20px;
@@ -37,22 +42,35 @@
       cursor: pointer;
       box-shadow: 0 0 6px rgba(0,0,0,0.2);
     }
+
+    .card:hover {
+      background: #f4f8ff;
+    }
+
     #updateOptions {
       display: none;
+      margin-top: 20px;
     }
+
+    /* ===== POPUP FIXED ===== */
     #popup {
       display: none;
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.5);
+      z-index: 9999;
     }
+
     .popup-box {
       background: white;
       width: 460px;
       margin: 60px auto;
       padding: 20px;
       border-radius: 8px;
+      position: relative;
+      z-index: 10000;
     }
+
     .popup-box input,
     .popup-box textarea,
     .popup-box select {
@@ -60,6 +78,7 @@
       padding: 6px;
       margin-top: 6px;
     }
+
     footer {
       margin-top: 40px;
       text-align: center;
@@ -69,8 +88,9 @@
   </style>
 </head>
 
-<body onload="checkSession()">
+<body onload="checkSession(); resetUI();">
 
+<!-- Top Bar -->
 <div class="top-bar">
   <h2>Smart Aadhaar Center Monitoring System</h2>
   <div>
@@ -81,11 +101,18 @@
 
 <hr>
 
+<!-- Main Options -->
 <div id="mainOptions">
-  <div class="card" onclick="showUpdateOptions()">Update Aadhaar Card</div>
-  <div class="card" onclick="freshApply()">Fresh Aadhaar Apply</div>
+  <div class="card" onclick="showUpdateOptions()">
+    Update Aadhaar Card
+  </div>
+
+  <div class="card" onclick="freshApply()">
+    Fresh Aadhaar Apply
+  </div>
 </div>
 
+<!-- Update Options -->
 <div id="updateOptions">
   <h3>Select Aadhaar Update Type</h3>
   <button onclick="openUpdateForm('name')">Update Name</button>
@@ -96,6 +123,7 @@
   <button onclick="openUpdateForm('biometric')">Update Biometrics</button>
 </div>
 
+<!-- Popup -->
 <div id="popup">
   <div class="popup-box">
     <h3 id="popupTitle"></h3>
@@ -120,6 +148,13 @@ const SCRIPT_URL =
 let collectedData = {};
 let serviceType = "";
 
+/* ================= UI RESET (FIX) ================= */
+function resetUI() {
+  document.getElementById("popup").style.display = "none";
+  document.getElementById("mainOptions").style.display = "block";
+  document.getElementById("updateOptions").style.display = "none";
+}
+
 /* ================= UPDATE FLOW ================= */
 function showUpdateOptions() {
   document.getElementById("mainOptions").style.display = "none";
@@ -128,11 +163,12 @@ function showUpdateOptions() {
 
 function openUpdateForm(type) {
   serviceType = "Update Aadhaar";
-  collectedData.updateType = type;
+  collectedData = { updateType: type };
+
   document.getElementById("popup").style.display = "block";
 
-  let html = "";
   let title = "";
+  let html = "";
 
   if (type === "name") {
     title = "Update Name";
@@ -141,17 +177,21 @@ function openUpdateForm(type) {
       Updated Name:<input id="updatedName">
     `;
   }
+
   if (type === "gender") {
     title = "Update Gender";
     html = `
-      Current Gender:<select id="currentGender">
+      Current Gender:
+      <select id="currentGender">
         <option>Male</option><option>Female</option><option>Other</option>
       </select>
-      Updated Gender:<select id="updatedGender">
+      Updated Gender:
+      <select id="updatedGender">
         <option>Male</option><option>Female</option><option>Other</option>
       </select>
     `;
   }
+
   if (type === "address") {
     title = "Update Address";
     html = `
@@ -159,6 +199,7 @@ function openUpdateForm(type) {
       Updated Address:<textarea id="updatedAddress"></textarea>
     `;
   }
+
   if (type === "mobile") {
     title = "Update Mobile";
     html = `
@@ -166,6 +207,7 @@ function openUpdateForm(type) {
       Updated Mobile:<input id="updatedMobile">
     `;
   }
+
   if (type === "email") {
     title = "Update Email";
     html = `
@@ -173,6 +215,7 @@ function openUpdateForm(type) {
       Updated Email:<input id="updatedEmail">
     `;
   }
+
   if (type === "biometric") {
     title = "Update Biometrics";
     html = `
@@ -189,11 +232,16 @@ function openUpdateForm(type) {
 /* ================= FRESH APPLY ================= */
 function freshApply() {
   serviceType = "Fresh Aadhaar";
+  collectedData = {};
+
   document.getElementById("popup").style.display = "block";
-  document.getElementById("popupTitle").innerText = "Fresh Aadhaar Application";
+  document.getElementById("popupTitle").innerText =
+    "Fresh Aadhaar Application";
+
   document.getElementById("popupBody").innerHTML = `
     Name:<input id="name">
-    Gender:<select id="gender">
+    Gender:
+    <select id="gender">
       <option>Male</option><option>Female</option><option>Other</option>
     </select>
     Address:<textarea id="address"></textarea>
@@ -202,10 +250,8 @@ function freshApply() {
   `;
 }
 
-/* ================= NEXT STEP (FIXED) ================= */
+/* ================= NEXT STEP ================= */
 function nextStep() {
-  collectedData = collectedData || {};
-
   const fields = document.querySelectorAll(
     "#popupBody input, #popupBody textarea, #popupBody select"
   );
@@ -214,7 +260,7 @@ function nextStep() {
     if (el.type === "checkbox") {
       if (!collectedData.biometrics) collectedData.biometrics = [];
       if (el.checked) collectedData.biometrics.push(el.value);
-    } else {
+    } else if (el.id) {
       collectedData[el.id] = el.value;
     }
   });
@@ -227,23 +273,26 @@ function nextStep() {
 }
 
 /* ================= SUBMIT ================= */
-<script>
 function submitApplication() {
   fetch(SCRIPT_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
     body:
       "action=submit" +
       "&service=" + encodeURIComponent(serviceType) +
       "&data=" + encodeURIComponent(JSON.stringify(collectedData))
   })
-  .then(res => res.text())
   .then(() => {
     alert("Application submitted successfully");
     location.reload();
   })
-  .catch(() => {
-    alert("Submission error");
-  });
+  .catch(() => alert("Submission error"));
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
 }
 </script>
+
+</body>
+</html>
