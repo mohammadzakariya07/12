@@ -2,35 +2,69 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Application Work Panel</title>
+<title>Admin Panel – Aadhaar Applications</title>
 
 <style>
-  body { font-family: Arial; background:#eef2f5; padding:20px; }
-  .box { background:#fff; padding:20px; max-width:500px; margin:auto; }
-  select, input, textarea, button {
-    width:100%; padding:8px; margin-top:10px;
+  body {
+    font-family: Arial;
+    background: #eef2f5;
+    padding: 20px;
   }
+  .box {
+    background: #fff;
+    padding: 20px;
+    max-width: 450px;
+    margin: auto;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  }
+  input, textarea, select, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 10px;
+  }
+  button { cursor: pointer; }
+
+  #panel { display: none; }
+
   #popup {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
   }
   .popup-box {
-    background:#fff; width:420px; margin:80px auto; padding:20px;
+    background: white;
+    width: 420px;
+    margin: 80px auto;
+    padding: 20px;
   }
 </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h2>Admin – Application Work Panel</h2>
+<!-- ================= ADMIN LOGIN ================= -->
+<div class="box" id="loginBox">
+  <h2>Admin Login</h2>
+  <input id="adminUser" placeholder="Username">
+  <input id="adminPass" type="password" placeholder="Password">
+  <button onclick="adminLogin()">Login</button>
+  <p id="loginError" style="color:red"></p>
+</div>
+
+<!-- ================= ADMIN PANEL ================= -->
+<div class="box" id="panel">
+  <h2>Application Work Panel</h2>
   <select id="appList" onchange="openPopup()">
     <option value="">Select Application</option>
   </select>
 </div>
 
+<!-- ================= POPUP ================= -->
 <div id="popup">
   <div class="popup-box">
-    <h3>Update Status</h3>
+    <h3>Update Application Status</h3>
 
     <button onclick="markDone()">Done</button>
     <button onclick="markNotDone()">Not Done</button>
@@ -45,25 +79,46 @@
 
 <script>
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbxRffghkixlECYJ6JGGAUFULLCvuIwtJAUKphFgvcczYBx_1bX-5ov9SO_JbU6r6_TL/exec";
+"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
 
+// ====== ADMIN LOGIN ======
+function adminLogin() {
+  const u = document.getElementById("adminUser").value;
+  const p = document.getElementById("adminPass").value;
+
+  if (u === "admin" && p === "admin123") {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("panel").style.display = "block";
+    loadApplications();
+  } else {
+    document.getElementById("loginError").innerText =
+      "Invalid admin credentials";
+  }
+}
+
+// ====== LOAD APPLICATIONS ======
 let selectedRow = "";
 let status = "";
 
-fetch(SCRIPT_URL)
-  .then(res => res.json())
-  .then(data => {
-    const list = document.getElementById("appList");
-    data.forEach(item => {
-      const opt = document.createElement("option");
-      opt.value = item.row;
-      opt.text =
-        item.row + " | " + item.service + " | " +
-        item.updateType + " | " + item.status;
-      list.appendChild(opt);
+function loadApplications() {
+  fetch(SCRIPT_URL)
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById("appList");
+      list.innerHTML = `<option value="">Select Application</option>`;
+      data.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.row;
+        opt.text =
+          item.row + " | " + item.service +
+          " | " + item.updateType +
+          " | " + item.status;
+        list.appendChild(opt);
+      });
     });
-  });
+}
 
+// ====== SELECT APPLICATION ======
 function openPopup() {
   selectedRow = document.getElementById("appList").value;
   if (selectedRow) {
@@ -72,6 +127,7 @@ function openPopup() {
   }
 }
 
+// ====== DONE / NOT DONE ======
 function markDone() {
   status = "Done";
   document.getElementById("formArea").innerHTML = `
@@ -90,13 +146,14 @@ function markNotDone() {
   `;
 }
 
+// ====== SUBMIT STATUS ======
 function submitStatus() {
   const phone = document.getElementById("phone")?.value || "";
   const remarks = document.getElementById("remarks")?.value || "";
 
   fetch(SCRIPT_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
     body:
       "action=update" +
       "&row=" + selectedRow +
@@ -104,13 +161,9 @@ function submitStatus() {
       "&remarks=" + encodeURIComponent(remarks) +
       "&phone=" + phone
   })
-  .then(res => res.text())
   .then(() => {
     alert("Status updated successfully");
     location.reload();
-  })
-  .catch(() => {
-    alert("Submission error");
   });
 }
 
