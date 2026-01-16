@@ -1,99 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <title>Smart Aadhaar – Public Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-  body {
-    font-family: Arial;
-    background: #0f172a;
-    color: white;
-    padding: 20px;
-    text-align: center;
-  }
-  h2 {
-    margin-bottom: 20px;
-  }
-  .container {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-  }
-  .card {
-    background: #1e293b;
-    width: 220px;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.4);
-  }
-  .card h3 {
-    font-size: 18px;
-    margin: 0;
-    color: #93c5fd;
-  }
-  .card p {
-    font-size: 42px;
-    margin: 12px 0 0;
-    font-weight: bold;
-    color: #38bdf8;
-  }
-  footer {
-    margin-top: 30px;
-    font-size: 12px;
-    opacity: 0.6;
-  }
+body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
+canvas { max-width:600px; margin:20px auto; }
 </style>
 </head>
 
 <body>
 
-<h2>📊 Smart Aadhaar – Live Status Dashboard</h2>
+<h2>📊 Aadhaar Application Status</h2>
 
-<div class="container">
-  <div class="card">
-    <h3>Total Applications</h3>
-    <p id="total">0</p>
-  </div>
-
-  <div class="card">
-    <h3>Pending</h3>
-    <p id="pending">0</p>
-  </div>
-
-  <div class="card">
-    <h3>Done</h3>
-    <p id="done">0</p>
-  </div>
-
-  <div class="card">
-    <h3>Not Done</h3>
-    <p id="notDone">0</p>
-  </div>
-</div>
-
-<footer>
-  Live data • Read-only • Auto-updated
-</footer>
+<canvas id="statusChart"></canvas>
 
 <script>
 const API =
-"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
+"https://script.google.com/macros/s/AKfycbxRffghkixlECYJ6JGGAUFULLCvuIwtJAUKphFgvcczYBx_1bX-5ov9SO_JbU6r6_TL/exec";
 
-function loadData() {
-  fetch(API)
+function loadChart() {
+  fetch(API + "?action=stats")
     .then(res => res.json())
     .then(d => {
-      document.getElementById("total").innerText = d.total;
-      document.getElementById("pending").innerText = d.pending;
-      document.getElementById("done").innerText = d.done;
-      document.getElementById("notDone").innerText = d.notDone;
+      new Chart(document.getElementById("statusChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Done", "Pending", "Not Done"],
+          datasets: [{
+            data: [d.done, d.pending, d.notDone],
+            backgroundColor: ["#22c55e","#eab308","#ef4444"]
+          }]
+        }
+      });
     });
 }
 
-loadData();
-setInterval(loadData, 5000); // auto update every 5 sec
+loadChart();
 </script>
 
 </body>
