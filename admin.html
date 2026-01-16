@@ -2,40 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Aadhaar Application Work Panel</title>
+<title>Application Work Panel</title>
 
 <style>
-  body {
-    font-family: Arial;
-    background: #eef2f5;
-    padding: 20px;
-  }
-  .box {
-    background: #fff;
-    padding: 20px;
-    max-width: 500px;
-    margin: auto;
-    box-shadow: 0 0 8px rgba(0,0,0,0.2);
-  }
+  body { font-family: Arial; background:#eef2f5; padding:20px; }
+  .box { background:#fff; padding:20px; max-width:500px; margin:auto; }
   select, input, textarea, button {
-    width: 100%;
-    padding: 8px;
-    margin-top: 10px;
-  }
-  button {
-    cursor: pointer;
+    width:100%; padding:8px; margin-top:10px;
   }
   #popup {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
   }
   .popup-box {
-    background: white;
-    width: 420px;
-    margin: 80px auto;
-    padding: 20px;
+    background:#fff; width:420px; margin:80px auto; padding:20px;
   }
 </style>
 </head>
@@ -43,8 +22,7 @@
 <body>
 
 <div class="box">
-  <h2>Application Work Panel</h2>
-
+  <h2>Admin – Application Work Panel</h2>
   <select id="appList" onchange="openPopup()">
     <option value="">Select Application</option>
   </select>
@@ -52,10 +30,10 @@
 
 <div id="popup">
   <div class="popup-box">
-    <h3>Update Application Status</h3>
+    <h3>Update Status</h3>
 
-    <button onclick="showDone()">Done</button>
-    <button onclick="showNotDone()">Not Done</button>
+    <button onclick="markDone()">Done</button>
+    <button onclick="markNotDone()">Not Done</button>
 
     <div id="formArea"></div>
 
@@ -67,10 +45,10 @@
 
 <script>
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
+"https://script.google.com/macros/s/AKfycbxRffghkixlECYJ6JGGAUFULLCvuIwtJAUKphFgvcczYBx_1bX-5ov9SO_JbU6r6_TL/exec";
 
 let selectedRow = "";
-let selectedStatus = "";
+let status = "";
 
 fetch(SCRIPT_URL)
   .then(res => res.json())
@@ -80,7 +58,8 @@ fetch(SCRIPT_URL)
       const opt = document.createElement("option");
       opt.value = item.row;
       opt.text =
-        `${item.row} | ${item.service} | ${item.updateType} | ${item.status}`;
+        item.row + " | " + item.service + " | " +
+        item.updateType + " | " + item.status;
       list.appendChild(opt);
     });
   });
@@ -93,16 +72,16 @@ function openPopup() {
   }
 }
 
-function showDone() {
-  selectedStatus = "Done";
+function markDone() {
+  status = "Done";
   document.getElementById("formArea").innerHTML = `
     Phone Number:
     <input id="phone">
   `;
 }
 
-function showNotDone() {
-  selectedStatus = "Not Done";
+function markNotDone() {
+  status = "Not Done";
   document.getElementById("formArea").innerHTML = `
     Reason:
     <textarea id="remarks"></textarea>
@@ -117,16 +96,21 @@ function submitStatus() {
 
   fetch(SCRIPT_URL, {
     method: "POST",
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body:
-      `row=${selectedRow}` +
-      `&status=${selectedStatus}` +
-      `&remarks=${encodeURIComponent(remarks)}` +
-      `&phone=${phone}`
+      "action=update" +
+      "&row=" + selectedRow +
+      "&status=" + status +
+      "&remarks=" + encodeURIComponent(remarks) +
+      "&phone=" + phone
   })
+  .then(res => res.text())
   .then(() => {
-    alert("Application updated successfully");
+    alert("Status updated successfully");
     location.reload();
+  })
+  .catch(() => {
+    alert("Submission error");
   });
 }
 
