@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aadhaar Application Work Panel</title>
+
+<style>
+  body {
+    font-family: Arial;
+    background: #eef2f5;
+    padding: 20px;
+  }
+  .box {
+    background: #fff;
+    padding: 20px;
+    max-width: 500px;
+    margin: auto;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+  }
+  select, input, textarea, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 10px;
+  }
+  button {
+    cursor: pointer;
+  }
+  #popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+  }
+  .popup-box {
+    background: white;
+    width: 420px;
+    margin: 80px auto;
+    padding: 20px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Application Work Panel</h2>
+
+  <select id="appList" onchange="openPopup()">
+    <option value="">Select Application</option>
+  </select>
+</div>
+
+<div id="popup">
+  <div class="popup-box">
+    <h3>Update Application Status</h3>
+
+    <button onclick="showDone()">Done</button>
+    <button onclick="showNotDone()">Not Done</button>
+
+    <div id="formArea"></div>
+
+    <br>
+    <button onclick="submitStatus()">Submit</button>
+    <button onclick="closePopup()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
+
+let selectedRow = "";
+let selectedStatus = "";
+
+fetch(SCRIPT_URL)
+  .then(res => res.json())
+  .then(data => {
+    const list = document.getElementById("appList");
+    data.forEach(item => {
+      const opt = document.createElement("option");
+      opt.value = item.row;
+      opt.text =
+        `${item.row} | ${item.service} | ${item.updateType} | ${item.status}`;
+      list.appendChild(opt);
+    });
+  });
+
+function openPopup() {
+  selectedRow = document.getElementById("appList").value;
+  if (selectedRow) {
+    document.getElementById("popup").style.display = "block";
+    document.getElementById("formArea").innerHTML = "";
+  }
+}
+
+function showDone() {
+  selectedStatus = "Done";
+  document.getElementById("formArea").innerHTML = `
+    Phone Number:
+    <input id="phone">
+  `;
+}
+
+function showNotDone() {
+  selectedStatus = "Not Done";
+  document.getElementById("formArea").innerHTML = `
+    Reason:
+    <textarea id="remarks"></textarea>
+    Phone Number:
+    <input id="phone">
+  `;
+}
+
+function submitStatus() {
+  const phone = document.getElementById("phone")?.value || "";
+  const remarks = document.getElementById("remarks")?.value || "";
+
+  fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body:
+      `row=${selectedRow}` +
+      `&status=${selectedStatus}` +
+      `&remarks=${encodeURIComponent(remarks)}` +
+      `&phone=${phone}`
+  })
+  .then(() => {
+    alert("Application updated successfully");
+    location.reload();
+  });
+}
+
+function closePopup() {
+  document.getElementById("popup").style.display = "none";
+}
+</script>
+
+</body>
+</html>
