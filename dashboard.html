@@ -227,23 +227,23 @@ function nextStep() {
 }
 
 /* ================= SUBMIT ================= */
+<script>
 function submitApplication() {
   fetch(SCRIPT_URL, {
     method: "POST",
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-    body: `service=${serviceType}&data=${encodeURIComponent(JSON.stringify(collectedData))}`
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body:
+      "action=submit" +
+      "&service=" + encodeURIComponent(serviceType) +
+      "&data=" + encodeURIComponent(JSON.stringify(collectedData))
   })
+  .then(res => res.text())
   .then(() => {
     alert("Application submitted successfully");
     location.reload();
   })
-  .catch(() => alert("Submission error"));
-}
-
-function closePopup() {
-  document.getElementById("popup").style.display = "none";
+  .catch(() => {
+    alert("Submission error");
+  });
 }
 </script>
-
-</body>
-</html>
