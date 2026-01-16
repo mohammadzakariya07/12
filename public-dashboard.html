@@ -1,43 +1,146 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>Smart Aadhaar – Public Dashboard</title>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body { font-family: Arial; background:#0f172a; color:white; text-align:center; }
-canvas { max-width:600px; margin:20px auto; }
+  body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+    padding: 20px;
+  }
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: #1e293b;
+    padding: 20px;
+    width: 200px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  }
+
+  .card h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #93c5fd;
+  }
+
+  .card p {
+    font-size: 36px;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #38bdf8;
+  }
+
+  canvas {
+    max-width: 400px;
+    margin: auto;
+  }
+
+  footer {
+    margin-top: 30px;
+    font-size: 12px;
+    opacity: 0.6;
+  }
 </style>
 </head>
 
 <body>
 
-<h2>📊 Aadhaar Application Status</h2>
+<h2>📊 Smart Aadhaar – Live Public Dashboard</h2>
 
+<!-- ===== NUMBERS ===== -->
+<div class="stats">
+  <div class="card">
+    <h3>Total Applications</h3>
+    <p id="total">0</p>
+  </div>
+
+  <div class="card">
+    <h3>Pending</h3>
+    <p id="pending">0</p>
+  </div>
+
+  <div class="card">
+    <h3>Done</h3>
+    <p id="done">0</p>
+  </div>
+
+  <div class="card">
+    <h3>Not Done</h3>
+    <p id="notDone">0</p>
+  </div>
+</div>
+
+<!-- ===== PIE CHART ===== -->
 <canvas id="statusChart"></canvas>
+
+<footer>
+  Read-only • Auto-updated • Public Access
+</footer>
 
 <script>
 const API =
 "https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
 
-function loadChart() {
-  fetch(API + "?action=stats")
+let chart;
+
+function loadDashboard() {
+  fetch(API)
     .then(res => res.json())
     .then(d => {
-      new Chart(document.getElementById("statusChart"), {
-        type: "doughnut",
-        data: {
-          labels: ["Done", "Pending", "Not Done"],
-          datasets: [{
-            data: [d.done, d.pending, d.notDone],
-            backgroundColor: ["#22c55e","#eab308","#ef4444"]
-          }]
-        }
-      });
+      // Update numbers
+      document.getElementById("total").innerText = d.total;
+      document.getElementById("pending").innerText = d.pending;
+      document.getElementById("done").innerText = d.done;
+      document.getElementById("notDone").innerText = d.notDone;
+
+      // Draw / update pie chart
+      const ctx = document.getElementById("statusChart").getContext("2d");
+
+      if (chart) {
+        chart.data.datasets[0].data = [d.done, d.pending, d.notDone];
+        chart.update();
+      } else {
+        chart = new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: ["Done", "Pending", "Not Done"],
+            datasets: [{
+              data: [d.done, d.pending, d.notDone],
+              backgroundColor: ["#22c55e", "#eab308", "#ef4444"]
+            }]
+          },
+          options: {
+            plugins: {
+              legend: {
+                labels: { color: "white" }
+              }
+            }
+          }
+        });
+      }
     });
 }
 
-loadChart();
+loadDashboard();
+setInterval(loadDashboard, 5000); // auto refresh every 5 seconds
 </script>
 
 </body>
