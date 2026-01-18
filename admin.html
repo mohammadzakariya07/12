@@ -169,9 +169,18 @@ function markNotDone() {
 
 
 // ====== SUBMIT STATUS ======
+
 function submitStatus() {
   const phone = document.getElementById("phone")?.value || "";
-  const remarks = document.getElementById("remarks")?.value || "";
+  let remarks = "";
+
+  // Collect checked issues
+  const issues = document.querySelectorAll(".issue:checked");
+  if (issues.length > 0) {
+    remarks = Array.from(issues)
+      .map(i => i.value)
+      .join(", ");
+  }
 
   fetch(SCRIPT_URL, {
     method: "POST",
@@ -188,6 +197,7 @@ function submitStatus() {
     location.reload();
   });
 }
+
 
 function closePopup() {
   document.getElementById("popup").style.display = "none";
