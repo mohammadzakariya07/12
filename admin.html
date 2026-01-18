@@ -136,15 +136,37 @@ function markDone() {
   `;
 }
 
+
 function markNotDone() {
   status = "Not Done";
   document.getElementById("formArea").innerHTML = `
-    Reason:
-    <textarea id="remarks"></textarea>
+    <b>Select Issue(s):</b><br><br>
+
+    <label>
+      <input type="checkbox" class="issue" value="Fingerprint sensor not working">
+      Fingerprint sensor not working
+    </label><br>
+
+    <label>
+      <input type="checkbox" class="issue" value="Iris sensor not working">
+      Iris sensor not working
+    </label><br>
+
+    <label>
+      <input type="checkbox" class="issue" value="Camera not working">
+      Camera not working
+    </label><br>
+
+    <label>
+      <input type="checkbox" class="issue" value="Incomplete document">
+      Incomplete document
+    </label><br><br>
+
     Phone Number:
     <input id="phone">
   `;
 }
+
 
 // ====== SUBMIT STATUS ======
 function submitStatus() {
