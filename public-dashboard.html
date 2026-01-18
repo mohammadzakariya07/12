@@ -72,39 +72,36 @@
 
 <script>
 const API_URL =
-"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec";
+"https://script.google.com/macros/s/AKfycbyfMiNBKK1C6qFZJHHJjCaa7HCOzJ30bECpoR1CY9fwgO01B78AeS8-LL6XBr8s6nZ9/exec"; // LIST API
 
 fetch(API_URL)
-  .then(r => r.text())
-  .then(txt => {
-    document.getElementById("raw").innerText = txt;
+  .then(r => r.json())
+  .then(list => {
+    console.log("LIST DATA:", list);
 
-    let data;
-    try {
-      data = JSON.parse(txt);
-    } catch (e) {
-      alert("JSON parse error");
-      return;
-    }
+    let total = list.length;
+    let pending = 0;
+    let done = 0;
+    let notDone = 0;
 
-    // SAFE rendering (never undefined)
-    document.getElementById("total").innerText =
-      data.total ?? data.Total ?? 0;
+    list.forEach(item => {
+      const status = (item.status || "Pending").toLowerCase();
 
-    document.getElementById("pending").innerText =
-      data.pending ?? data.Pending ?? 0;
+      if (status === "done") done++;
+      else if (status === "not done" || status === "notdone") notDone++;
+      else pending++;
+    });
 
-    document.getElementById("done").innerText =
-      data.done ?? data.Done ?? 0;
-
-    document.getElementById("notDone").innerText =
-      data.notDone ?? data.not_done ?? data.NotDone ?? 0;
+    document.getElementById("total").innerText = total;
+    document.getElementById("pending").innerText = pending;
+    document.getElementById("done").innerText = done;
+    document.getElementById("notDone").innerText = notDone;
   })
   .catch(err => {
-    document.getElementById("raw").innerText =
-      "FETCH ERROR:\n" + err;
+    console.error("Dashboard error:", err);
   });
 </script>
+
 
 </body>
 </html>
